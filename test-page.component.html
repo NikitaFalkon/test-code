@@ -1,0 +1,118 @@
+@let entries = displayStateEntries();
+@let hidden = isHidden();
+
+@if (entries.length > 0) {
+	<div
+		class="upload-container mat-elevation-z3 z-[301] bg-gray-200 px-2"
+		[class.process-hide]="hidden"
+		cdkDrag
+		cdkDragHandle
+		[cdkDragBoundary]="dragBoundary()"
+		cdkDragRootElement=".upload-container"
+	>
+		<div class="flex items-center justify-between gap-1">
+			<h2 class="p-2 text-left text-sm font-semibold">
+				Improving CV{{ entries.length > 1 ? "s" : "" }}:
+			</h2>
+			<div class="flex items-center justify-end gap-3">
+				<span
+					class="cursor-pointer"
+					(click)="toggleHidden()"
+					[matTooltip]="hidden ? 'Show improving CV' : 'Hide improving CV'"
+				>
+					@if (hidden) {
+						<mat-icon class="small-icon">maximize</mat-icon>
+					} @else {
+						<mat-icon class="small-icon">minimize</mat-icon>
+					}
+				</span>
+				<mat-icon (click)="closeAll()" class="small-icon mb-2 cursor-pointer"
+					>close</mat-icon
+				>
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-1 pt-2" [class.hidden]="hidden">
+			@for (entry of entries; track entry[0]) {
+				@let key = entry[0];
+				@let state = entry[1];
+				<div
+					class="flex flex-nowrap items-center justify-items-start gap-2 px-1 pb-1"
+				>
+					@let displayName =
+						state.firstName || state.lastName
+							? ((state.firstName ?? "") + " " + (state.lastName ?? "")).trim()
+							: state.filename || "CV";
+					@if (state.personId && state.cvId) {
+						<a
+							class="w-max-80 truncate text-sm text-blue-800"
+							[routerLink]="['/persons', state.personId, state.cvId]"
+							[matTooltip]="state.filename"
+						>
+							{{ displayName }}
+						</a>
+					} @else {
+						<span
+							class="w-max-80 truncate text-sm text-gray-500"
+							[matTooltip]="state.filename"
+						>
+							{{ displayName }}
+						</span>
+					}
+
+					@switch (state.stage) {
+						@case ("improving") {
+							<mat-spinner diameter="20" />
+							<p class="text-xs">improving...</p>
+						}
+						@case ("pending_approval") {
+							<mat-icon class="text-yellow-600">pending</mat-icon>
+							@if (
+								state.cvId &&
+								state.vacancyId &&
+								isApprovalSubmittedFor(state.cvId, state.vacancyId)
+							) {
+								<p class="text-xs">approving...</p>
+							} @else {
+								<span
+									class="cursor-pointer text-xs text-orange-500"
+									(click)="openApproveDialog(state)"
+									matTooltip="Open approval"
+									>pending approval...</span
+								>
+							}
+						}
+						@case ("converting") {
+							<mat-spinner diameter="20" />
+							<p class="text-xs">converting...</p>
+						}
+						@case ("done") {
+							<mat-icon
+								fontSet="material-symbols-outlined"
+								class="text-blue-800"
+								>check_circle</mat-icon
+							>
+						}
+						@case ("failed") {
+							<mat-icon
+								class="text-red-500"
+								[matTooltip]="state.errorMessage ?? ''"
+								>error_outline</mat-icon
+							>
+						}
+						@case ("revoked") {
+							<mat-icon class="text-red-500">cancel</mat-icon>
+						}
+					}
+
+					<mat-icon
+						(click)="closeEntry(key)"
+						class="small-icon ml-auto cursor-pointer"
+						matTooltip="Hide this task"
+						>close</mat-icon
+					>
+				</div>
+			}
+		</div>
+	</div>
+}

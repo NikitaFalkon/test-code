@@ -157,7 +157,7 @@ export class CvImproveProcessingPanelComponent implements OnInit {
 
 	openApproveDialog(state: ImproveDisplayState): void {
 		const pending = state.pendingData;
-		if (!pending) return;
+		if (!pending?.publication_id || !pending.filename) return;
 
 		const cvId = pending.cv_id;
 		const vacancyId = pending.vacancy_id;

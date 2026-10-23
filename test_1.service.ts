@@ -165,14 +165,14 @@ export class CommonService {
 		});
 
 		const load = (): Promise<T[]> => {
-			if (hasSeed) {
-				return Promise.resolve(fallback);
-			}
-
 			if (!requested()) {
 				requested.set(true);
 			} else if (resource.status() === "error") {
 				resource.reload();
+			}
+
+			if (hasSeed) {
+				return Promise.resolve(fallback);
 			}
 
 			if (resource.status() === "resolved") {
